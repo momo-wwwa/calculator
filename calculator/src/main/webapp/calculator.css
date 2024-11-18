@@ -1,0 +1,118 @@
+/* Bodyのスタイル */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 150vh;
+    margin: 0;
+}
+
+/* 計算機コンテナのスタイル */
+.calculator {
+    width: 360px;
+    text-align: center;
+    border: 2px solid #333;
+    padding: 5px;
+    border-radius: 8px;
+}
+
+/* ディスプレイのスタイル */
+.display {
+    text-align: right;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    padding: 10px; /* ボタンのサイズに合わせて調整 */
+    height: 50px; /* 固定サイズに変更 */
+    border: 1px solid #333;
+    border-radius: 4px;
+    background-color: #f7f7f7;
+    overflow: hidden; /* テキストがオーバーフローする場合 */
+    white-space: nowrap; /* テキストが折り返されないように */
+    text-overflow: ellipsis; /* 長いテキストを省略 */
+}
+
+/* ボタンのグリッドレイアウト */
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4列に分ける */
+    grid-template-rows: repeat(5, 1fr);    /* 5行に分ける */
+    gap: 5px;
+}
+
+/* 一般的なボタンのスタイル */
+button {
+    font-size: 1.2em;
+    padding: 15px;
+    margin-bottom: 5px;
+    width: 60px; /* ボタンの幅を固定 */
+    height: 50px; /* ボタンの高さを固定 */
+    border: none;
+    border-radius: 4px;
+    background-color: #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* ボタンにホバーしたときの効果 */
+button:hover {
+    background-color: #d0d0d0;
+}
+
+/* 演算子ボタンの特別なスタイル */
+.operator {
+    background-color: #ffbf00;
+    color: white;
+}
+
+.operator:hover {
+    background-color: #ff9f00;
+}
+
+/* イコールボタンの特別なスタイル */
+.equal {
+    background-color: #4caf50;
+    color: white;
+    grid-row: span 2;  /* 縦に2行にまたがる */
+    grid-column: 4;   /* 4列目に配置 */
+}
+
+.equal:hover {
+    background-color: #45a049;
+}
+
+/* クリアボタンの特別なスタイル */
+.clear {
+    background-color: #f44336;
+    color: white;
+}
+
+.clear:hover {
+    background-color: #e53935;
+}
+
+/* 0ボタンの特別なスタイル */
+.zero {
+    grid-column: span 2; /* 0ボタンは2列分にまたがる */
+    grid-row: 5;         /* 5行目に配置 */
+}
+
+/* 税込み・税抜きボタンのスタイル */
+.tax-button {
+    font-size: 0.1em; /* 小さな文字サイズ */
+    display: inline-flex; /* 横並びにするため */
+    width: 60px; /* 幅を固定 */
+    height: 50px; /* 高さを調整 */
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* 税込み・税抜きボタンにホバーしたときの効果 */
+.tax-button:hover {
+    background-color: #e0e0e0;
+}
+
