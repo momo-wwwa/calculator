@@ -56,7 +56,7 @@ FB:.を二回入力した場合、０で割ったときエラー、‐から始�
         memory -= Double.parseDouble(num);
     } else if (clear != null) {
         if (clear.equals("CE")) {
-            num = "";
+        	num = "";
         } else {
             expression = "";
             num = "";
@@ -98,11 +98,14 @@ FB:.を二回入力した場合、０で割ったときエラー、‐から始�
             num = input;      // 新しい数値を入力
             calculated = false;
             newNumber = false;
-        } else {
+    	}else {
             if (input.matches("[0-9]")) {
-                if (newNumber || num.equals("-")) {  // 新しい数値の入力、または `-` の後
+                if (newNumber && num.equals("-")) {  // 新しい数値の入力、または `-` の後
                     num += input;  // 負号後に数字を続けて入力
                     newNumber = false;
+                } else if(newNumber){
+                	num = input;
+                	newNumber = false;
                 } else {
                     num += input;  // 通常の数字入力
                 }
@@ -111,7 +114,7 @@ FB:.を二回入力した場合、０で割ったときエラー、‐から始�
                 num = num.equals("-") ? "" : "-";  // 切り替え
             } else {
                 expression += num + input;  // 演算子を含む式を入力
-                num = "";  // 演算子入力後に num をリセット
+                // 演算子入力後に num をリセット
                 newNumber = true;
             }
         }
@@ -138,7 +141,11 @@ FB:.を二回入力した場合、０で割ったときエラー、‐から始�
                         break;
                 }
             }
-            expression = String.valueOf(result);  // 結果を式に設定
+            if(result == Math.floor(result)){
+            	expression = String.valueOf((int)result);
+            }else{
+            	expression = String.valueOf(result);  // 結果を式に設定
+            }
             num = "";  // 計算後に num をリセット
             calculated = true;
             newNumber = false;
@@ -316,7 +323,7 @@ button:hover {
             <button type="submit" class="button memory" name="subtractMemory" value="-M">-M</button>
             
             <button type="submit" class="button operator" name="negate" value="+/-">+/-</button>
-            <button type="submit" class="clear" name="clear" value="clear">CE</button>
+            <button type="submit" class="clear" name="clear" value="CE">CE</button>
             <button type="submit" class="clear" name="clear" value="clear">C</button>
             <button type="submit" class="tax_button" name="taxIncluded" value="taxIncluded">税</button>
             <button type="submit" class="tax_botton" name="taxExcluded" value="taxExcluded">抜</button>
