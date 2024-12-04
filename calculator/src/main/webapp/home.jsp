@@ -1,9 +1,4 @@
-<!-- めも　
-不具合：小数点使えるけど表示されなくなった、なんでやねん。税抜きがおかしくなる。MSをおすとえらーがでるよ。
-MRおすと数字がでるんの数字。
-未実装：+/-での符号の入れ替え。CEおすと入力直後だけが消える。00をおすと00が加えられる。
-努力課題：イコールを縦2列で表示 
-FB:.を二回入力した場合、０で割ったときエラー、‐から始められるように。-->
+<!-- めも　-->
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
     // 初期値やセッションの確認
@@ -65,16 +60,22 @@ FB:.を二回入力した場合、０で割ったときエラー、‐から始�
             error = ""; // エラーもクリア
         }
     } else if (negate != null) {
-        if (num.isEmpty()) {
+    	if (!expression.isEmpty() && calculated) {
+	        // 計算済みの結果がある場合、符号を反転
+	        expression = String.valueOf(-Double.parseDouble(expression));
+    	} else if (num.isEmpty()) {
             num = "-"; // 数値が空の場合、`-` のみを設定
         } else if (num.equals("-")) {
             num = ""; // `-` がすでに入力されている場合はクリア
         } else {
             num = String.valueOf(-Double.parseDouble(num)); // 符号反転
         }
-    } else if(input != null && input.equals(".") && !num.contains(".")) {
-        num += ".";
-    }else if (taxIncluded != null) {
+    } else if(input != null && input.equals(".")) {
+        if (!num.contains(".")) {
+            // 数値が空ならば "0." をセット、それ以外では小数点を追加
+            num = num.isEmpty() ? "0." : num + ".";
+        }
+    } else if (taxIncluded != null) {
         num = String.valueOf(Double.parseDouble(num) * 1.1);
     } else if (taxExcluded != null) {
         num = String.valueOf(Double.parseDouble(num) / 1.1);
@@ -96,15 +97,16 @@ FB:.を二回入力した場合、０で割ったときエラー、‐から始�
         if (calculated) {
             expression = "";  // 計算後に式をリセット
             num = input;      // 新しい数値を入力
+            num = input.equals("00") ? "0" : input; // 新しい数値を入力
             calculated = false;
             newNumber = false;
-    	}else {
-            if (input.matches("[0-9]")) {
+    	} else {
+            if (input.matches("[0-9]|00")) {
                 if (newNumber && num.equals("-")) {  // 新しい数値の入力、または `-` の後
                     num += input;  // 負号後に数字を続けて入力
                     newNumber = false;
                 } else if(newNumber){
-                	num = input;
+                	num = input.equals("00") ? "00" : input; // 新しい数値を入力
                 	newNumber = false;
                 } else {
                     num += input;  // 通常の数字入力
@@ -143,7 +145,7 @@ FB:.を二回入力した場合、０で割ったときエラー、‐から始�
             }
             if(result == Math.floor(result)){
             	expression = String.valueOf((int)result);
-            }else{
+            } else {
             	expression = String.valueOf(result);  // 結果を式に設定
             }
             num = "";  // 計算後に num をリセット
@@ -166,8 +168,7 @@ FB:.を二回入力した場合、０で割ったときエラー、‐から始�
 <head>
 <meta charset="UTF-8">
 <title>Calculator</title>
-<style>
-/* Bodyのスタイル */
+<style>/* Bodyのスタイル */
 body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -176,7 +177,6 @@ body {
  
     margin: 0;
 }
-
 .explanation-list {
     width: 200px;
     height: 100%;
@@ -188,7 +188,6 @@ body {
     border-right: 2px solid #333;
     display: <% if (isExplanationVisible) { %> block <% } else { %> none <% } %>;
 }
-
 /* 計算機コンテナのスタイル */
 .calculator {
 	margin-left: 220px; /* 説明が表示されているときに左にスペースを作る */
@@ -198,7 +197,6 @@ body {
     padding: 5px;
     border-radius: 8px;
 }
-
 /* ディスプレイのスタイル */
 .display {
     text-align: right;
@@ -292,14 +290,10 @@ button:hover {
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
-
 /* 税込み・税抜きボタンにホバーしたときの効果 */
 .tax-button:hover {
     background-color: #e0e0e0;
-}
-
-
-</style>
+}</style>
 </head>
 <body>
 <div class="explanation-list">
