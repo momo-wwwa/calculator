@@ -1,167 +1,174 @@
 <!-- めも　-->
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
-    // 初期値やセッションの確認
-    String expression = request.getParameter("expression") != null ? request.getParameter("expression") : "";
-    String num = request.getParameter("num") != null ? request.getParameter("num") : "";
-    String input = request.getParameter("input");
-    String calculate = request.getParameter("calculate");
-    String clear = request.getParameter("clear");
-    String memoryClear = request.getParameter("clearMemory");
-    String memoryRecall = request.getParameter("recallMemory");
-    String memorySave = request.getParameter("saveMemory");
-    String memoryAdd = request.getParameter("addMemory");
-    String memorySubtract = request.getParameter("subtractMemory");
-    String taxIncluded = request.getParameter("taxIncluded");
-    String taxExcluded = request.getParameter("taxExcluded");
-    String percent = request.getParameter("percent");
-    String squareRoot = request.getParameter("squareRoot");
-    String negate = request.getParameter("negate");
-    String showExplanation = request.getParameter("showExplanation");
 
-    double memory = session.getAttribute("memory") != null ? (double) session.getAttribute("memory") : 0;
-    boolean calculated = "true".equals(request.getParameter("calculated"));
-    boolean newNumber = "true".equals(request.getParameter("newNumber"));
-    boolean isExplanationVisible = "true".equals(showExplanation);
-    String error = ""; // エラー表示用変数
-
-	 // 説明内容のリスト
-    String[] explanations = {
-        "数字ボタン: 0〜9の数字を入力。",
-        "演算子ボタン: +, -, *, / を使用して計算。",
-        "税抜き・税込みボタン: 税込み価格や税抜き価格を計算。",
-        "＝ボタン: 計算結果を表示。",
-        "Cボタン: 入力した数値をクリア。",
-        "CEボタン: 現在の入力をクリア。",
-        "±ボタン: 数値の符号を反転。",
-        "√ボタン: 数値の平方根を計算。",
-        "メモリ機能: メモリに値を保存したり、読み込んだり、追加したり、減算したりできます。"
-    };
-    
-    // ボタンの動作
-    if (memoryClear != null) {
-        memory = 0;
-    } else if (memoryRecall != null) {
-        num = String.valueOf(memory);
-    } else if (memorySave != null && !num.isEmpty()) {
-        memory = Double.parseDouble(num);
-    } else if (memoryAdd != null) {
-        memory += Double.parseDouble(num);
-    } else if (memorySubtract != null) {
-        memory -= Double.parseDouble(num);
-    } else if (clear != null) {
-        if (clear.equals("CE")) {
-        	num = "";
-        } else {
-            expression = "";
-            num = "";
-            calculated = false;
-            newNumber = false;
-            error = ""; // エラーもクリア
-        }
-    } else if (negate != null) {
-    	if (!expression.isEmpty() && calculated) {
-	        // 計算済みの結果がある場合、符号を反転
-	        expression = String.valueOf(-Double.parseDouble(expression));
-    	} else if (num.isEmpty()) {
-            num = "-"; // 数値が空の場合、`-` のみを設定
-        } else if (num.equals("-")) {
-            num = ""; // `-` がすでに入力されている場合はクリア
-        } else {
-            num = String.valueOf(-Double.parseDouble(num)); // 符号反転
-        }
-    } else if(input != null && input.equals(".")) {
-        if (!num.contains(".")) {
-            // 数値が空ならば "0." をセット、それ以外では小数点を追加
-            num = num.isEmpty() ? "0." : num + ".";
-        }
-    } else if (taxIncluded != null) {
-        num = String.valueOf(Double.parseDouble(num) * 1.1);
-    } else if (taxExcluded != null) {
-        num = String.valueOf(Double.parseDouble(num) / 1.1);
-    } else if (percent != null) {
-        num = String.valueOf(Double.parseDouble(num) / 100);
-    } else if (squareRoot != null) {
-        try {
-            double value = Double.parseDouble(num);
-            if (value >= 0) {
-                num = String.valueOf(Math.sqrt(value));
-            } else {
-                error = "Error";
-            }
-        } catch (Exception e) {
-            error = "Error";
-        }
-    } else if (input != null) {
-        // 数字と演算子の入力処理
-        if (calculated) {
-            expression = "";  // 計算後に式をリセット
-            num = input;      // 新しい数値を入力
-            num = input.equals("00") ? "0" : input; // 新しい数値を入力
-            calculated = false;
-            newNumber = false;
-    	} else {
-            if (input.matches("[0-9]|00")) {
-                if (newNumber && num.equals("-")) {  // 新しい数値の入力、または `-` の後
-                    num += input;  // 負号後に数字を続けて入力
-                    newNumber = false;
-                } else if(newNumber){
-                	num = input.equals("00") ? "00" : input; // 新しい数値を入力
-                	newNumber = false;
-                } else {
-                    num += input;  // 通常の数字入力
-                }
-            } else if (input.equals("-") && (num.isEmpty() || num.matches("[-]"))) {
-                // 数値が空または `-` のみの状態で再度 `-` を入力
-                num = num.equals("-") ? "" : "-";  // 切り替え
-            } else {
-                expression += num + input;  // 演算子を含む式を入力
-                // 演算子入力後に num をリセット
-                newNumber = true;
-            }
-        }
-    } else if (calculate != null && !expression.isEmpty()) {
-        try {
-            expression += num;  // 現在の数値を式に追加
-            String[] tokens = expression.split("((?<=[-+*/])|(?=[-+*/]))");
-            double result = Double.parseDouble(tokens[0]);
-
-            for (int i = 1; i < tokens.length; i += 2) {
-                String operator = tokens[i];
-                double nextNum = Double.parseDouble(tokens[i + 1]);
-                switch (operator) {
-                    case "+": result += nextNum; break;
-                    case "-": result -= nextNum; break;
-                    case "*": result *= nextNum; break;
-                    case "/":
-                        if (nextNum != 0) {
-                            result /= nextNum;
-                        } else {
-                            error = "Error";
-                            throw new ArithmeticException("Division by zero");
-                        }
-                        break;
-                }
-            }
-            if(result == Math.floor(result)){
-            	expression = String.valueOf((int)result);
-            } else {
-            	expression = String.valueOf(result);  // 結果を式に設定
-            }
-            num = "";  // 計算後に num をリセット
-            calculated = true;
-            newNumber = false;
-        } catch (Exception e) {
-            error = "Error";  // 計算エラー
-            expression = "";
-            num = "";
-            calculated = false;
-            newNumber = false;
-        }
-    }
-
-    session.setAttribute("memory", memory);
-    String displayExpression = error.isEmpty() ? (calculated ? expression : num) : error;
+	    // 初期値やセッションの確認
+	    String expression = request.getParameter("expression") != null ? request.getParameter("expression") : "";
+	    String num = request.getParameter("num") != null ? request.getParameter("num") : "";
+	    String input = request.getParameter("input");
+	    String calculate = request.getParameter("calculate");
+	    String clear = request.getParameter("clear");
+	    String memoryClear = request.getParameter("clearMemory");
+	    String memoryRecall = request.getParameter("recallMemory");
+	    String memorySave = request.getParameter("saveMemory");
+	    String memoryAdd = request.getParameter("addMemory");
+	    String memorySubtract = request.getParameter("subtractMemory");
+	    String taxIncluded = request.getParameter("taxIncluded");
+	    String taxExcluded = request.getParameter("taxExcluded");
+	    String percent = request.getParameter("percent");
+	    String squareRoot = request.getParameter("squareRoot");
+	    String negate = request.getParameter("negate");
+	    String showExplanation = request.getParameter("showExplanation");
+	
+	    double memory = session.getAttribute("memory") != null ? (double) session.getAttribute("memory") : 0;
+	    boolean calculated = "true".equals(request.getParameter("calculated"));
+	    boolean newNumber = "true".equals(request.getParameter("newNumber"));
+	    boolean isExplanationVisible = "true".equals(showExplanation);
+	    String error = ""; // エラー表示用変数
+	
+		 // 説明内容のリスト
+	    String[] explanations = {
+	        "数字ボタン: 0〜9の数字を入力。",
+	        "演算子ボタン: +, -, *, / を使用して計算。",
+	        "税抜き・税込みボタン: 税込み価格や税抜き価格を計算。",
+	        "＝ボタン: 計算結果を表示。",
+	        "Cボタン: 入力した数値をクリア。",
+	        "CEボタン: 現在の入力をクリア。",
+	        "±ボタン: 数値の符号を反転。",
+	        "√ボタン: 数値の平方根を計算。",
+	        "メモリ機能: メモリに値を保存したり、読み込んだり、追加したり、減算したりできます。"
+	    };
+	    
+	 	// 説明の表示状態をトグル
+	    if (request.getParameter("toggleExplanation") != null) {
+	        isExplanationVisible = !isExplanationVisible; // 表示状態を切り替え
+	    }
+	    
+	    // ボタンの動作
+	    if (memoryClear != null) {
+	        memory = 0;
+	    } else if (memoryRecall != null) {
+	        num = String.valueOf(memory);
+	    } else if (memorySave != null && !num.isEmpty()) {
+	        memory = Double.parseDouble(num);
+	    } else if (memoryAdd != null) {
+	        memory += Double.parseDouble(num);
+	    } else if (memorySubtract != null) {
+	        memory -= Double.parseDouble(num);
+	    } else if (clear != null) {
+	        if (clear.equals("CE")) {
+	        	num = "";
+	        } else {
+	            expression = "";
+	            num = "";
+	            calculated = false;
+	            newNumber = false;
+	            error = ""; // エラーもクリア
+	        }
+	    } else if (negate != null) {
+	    	if (!expression.isEmpty() && calculated) {
+		        // 計算済みの結果がある場合、符号を反転
+		        expression = String.valueOf(-Double.parseDouble(expression));
+	    	} else if (num.isEmpty()) {
+	            num = "-"; // 数値が空の場合、`-` のみを設定
+	        } else if (num.equals("-")) {
+	            num = ""; // `-` がすでに入力されている場合はクリア
+	        } else {
+	            num = String.valueOf(-Double.parseDouble(num)); // 符号反転
+	        }
+	    } else if(input != null && input.equals(".")) {
+	        if (!num.contains(".")) {
+	            // 数値が空ならば "0." をセット、それ以外では小数点を追加
+	            num = num.isEmpty() ? "0." : num + ".";
+	        }
+	    } else if (taxIncluded != null) {
+	        num = String.valueOf(Double.parseDouble(num) * 1.1);
+	    } else if (taxExcluded != null) {
+	        num = String.valueOf(Double.parseDouble(num) / 1.1);
+	    } else if (percent != null) {
+	        num = String.valueOf(Double.parseDouble(num) / 100);
+	    } else if (squareRoot != null) {
+	        try {
+	            double value = Double.parseDouble(num);
+	            if (value >= 0) {
+	                num = String.valueOf(Math.sqrt(value));
+	            } else {
+	                error = "Error";
+	            }
+	        } catch (Exception e) {
+	            error = "Error";
+	        }
+	    } else if (input != null) {
+	        // 数字と演算子の入力処理
+	        if (calculated) {
+	            expression = "";  // 計算後に式をリセット
+	            num = input;      // 新しい数値を入力
+	            num = input.equals("00") ? "0" : input; // 新しい数値を入力
+	            calculated = false;
+	            newNumber = false;
+	    	} else {
+	            if (input.matches("[0-9]|00")) {
+	                if (newNumber && num.equals("-")) {  // 新しい数値の入力、または `-` の後
+	                    num += input;  // 負号後に数字を続けて入力
+	                    newNumber = false;
+	                } else if(newNumber){
+	                	num = input.equals("00") ? "00" : input; // 新しい数値を入力
+	                	newNumber = false;
+	                } else {
+	                    num += input;  // 通常の数字入力
+	                }
+	            } else if (input.equals("-") && (num.isEmpty() || num.matches("[-]"))) {
+	                // 数値が空または `-` のみの状態で再度 `-` を入力
+	                num = num.equals("-") ? "" : "-";  // 切り替え
+	            } else {
+	                expression += num + input;  // 演算子を含む式を入力
+	                // 演算子入力後に num をリセット
+	                newNumber = true;
+	            }
+	        }
+	    } else if (calculate != null && !expression.isEmpty()) {
+	        try {
+	            expression += num;  // 現在の数値を式に追加
+	            String[] tokens = expression.split("((?<=[-+*/])|(?=[-+*/]))");
+	            double result = Double.parseDouble(tokens[0]);
+	
+	            for (int i = 1; i < tokens.length; i += 2) {
+	                String operator = tokens[i];
+	                double nextNum = Double.parseDouble(tokens[i + 1]);
+	                switch (operator) {
+	                    case "+": result += nextNum; break;
+	                    case "-": result -= nextNum; break;
+	                    case "*": result *= nextNum; break;
+	                    case "/":
+	                        if (nextNum != 0) {
+	                            result /= nextNum;
+	                        } else {
+	                            error = "Error";
+	                            throw new ArithmeticException("Division by zero");
+	                        }
+	                        break;
+	                }
+	            }
+	            if(result == Math.floor(result)){
+	            	expression = String.valueOf((int)result);
+	            } else {
+	            	expression = String.valueOf(result);  // 結果を式に設定
+	            }
+	            num = "";  // 計算後に num をリセット
+	            calculated = true;
+	            newNumber = false;
+	        } catch (Exception e) {
+	            error = "Error";  // 計算エラー
+	            expression = "";
+	            num = "";
+	            calculated = false;
+	            newNumber = false;
+	        }
+	    }
+	
+	    session.setAttribute("memory", memory);
+	    session.setAttribute("isExplanationVisible", isExplanationVisible);
+	    String displayExpression = error.isEmpty() ? (calculated ? expression : num) : error;
 %>
 <!DOCTYPE html>
 <html>
@@ -174,7 +181,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
- 
     margin: 0;
 }
 .explanation-list {
@@ -186,17 +192,18 @@ body {
     top: 0;
     padding: 10px;
     border-right: 2px solid #333;
-    display: <% if (isExplanationVisible) { %> block <% } else { %> none <% } %>;
+    display: <%= isExplanationVisible ? "block" : "none" %>;
 }
 /* 計算機コンテナのスタイル */
 .calculator {
-	margin-left: 220px; /* 説明が表示されているときに左にスペースを作る */
-    width: 360px;
+	margin-left: <%= isExplanationVisible ? "220px" : "0" %>; /* 説明表示時に余白を作成 */
+    width: 400px;
     text-align: center;
     border: 2px solid #333;
     padding: 5px;
     border-radius: 8px;
 }
+
 /* ディスプレイのスタイル */
 .display {
     text-align: right;
@@ -215,8 +222,8 @@ body {
 /* ボタンのグリッドレイアウト */
 .buttons {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4列に分ける */
-    grid-template-rows: repeat(5, 1fr);    /* 5行に分ける */
+	grid-template-rows: repeat(4, 1fr);    /* 5行に分ける */
+    grid-template-columns: repeat(5, 1fr); /* 4列に分ける */
     gap: 5px;
 }
 
@@ -224,9 +231,10 @@ body {
 button {
     font-size: 1.2em;
     padding: 15px;
+	margin-left: 5px;
     margin-bottom: 5px;
     width: 60px; /* ボタンの幅を固定 */
-    height: 50px; /* ボタンの高さを固定 */
+    /* height: 50px; /* ボタンの高さを固定 */
     border: none;
     border-radius: 4px;
     background-color: #e0e0e0;
@@ -253,8 +261,8 @@ button:hover {
 .equal {
     background-color: #4caf50;
     color: white;
-    grid-row: span 2;  /* 縦に2行にまたがる */
-    grid-column: 4;   /* 4列目に配置 */
+     grid-row: span 2;  /* 縦に2行にまたがる */
+     grid-column: 5;   /* 4列目に配置 */
 }
 
 .equal:hover {
@@ -293,13 +301,14 @@ button:hover {
 /* 税込み・税抜きボタンにホバーしたときの効果 */
 .tax-button:hover {
     background-color: #e0e0e0;
-}</style>
+}
+</style>
 </head>
 <body>
-<div class="explanation-list">
+<div class="explanation-list" style="display: <%= (boolean) session.getAttribute("isExplanationVisible") ? "block" : "none" %>;">
     <h3>説明</h3>
     <ul>
-        <% for (String explanation : explanations) { %>
+         <% for (String explanation : explanations) { %>
             <li><%= explanation %></li>
         <% } %>
     </ul>
@@ -344,10 +353,11 @@ button:hover {
             <button type="submit" class="button" name="input" value="00">00</button>
             <button type="submit" class="button" name="input" value=".">.</button>
             <button type="submit" class="button operator" name="input" value="+">+</button>
-            <button type="submit" class="button" name="showExplanation" value="true">?</button>
+            <!--<button type="submit" class="button" name="toggleExplanation" value="true">?</button> -->
         </div>
 
         <!-- 隠しフィールドで現在の数式と状態を保存 -->
+        <input type="hidden" name="isExplanationVisible" value="<%= isExplanationVisible %>">
         <input type="hidden" name="expression" value="<%= expression %>">
         <input type="hidden" name="num" value="<%= num %>">
         <input type="hidden" name="calculated" value="<%= calculated ? "true" : "false" %>">
